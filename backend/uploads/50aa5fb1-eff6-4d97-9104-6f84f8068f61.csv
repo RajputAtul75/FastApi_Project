@@ -1,0 +1,11 @@
+Month,Region,Product Category,Units Sold,Unit Price (₹),Total Revenue (₹),Customer Rating
+Jan,North,Electronics,120,"15,000","1,800,000",4.5
+Jan,South,Clothing,200,"1,200","240,000",4.2
+Feb,East,Furniture,80,"8,000","640,000",4.1
+Feb,West,Grocery,400,150,"60,000",4.6
+Mar,North,Electronics,95,"16,000","1,520,000",4.4
+Mar,South,Clothing,210,"1,100","231,000",4.3
+Apr,East,Furniture,70,"8,500","595,000",4
+Apr,West,Grocery,450,145,"65,250",4.7
+May,North,Electronics,105,"14,500","1,522,500",4.6
+May,South,Clothing,230,"1,300","299,000",4.1

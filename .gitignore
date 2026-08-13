@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Environment files
 .env
 *.env
@@ -9,10 +10,31 @@ __pycache__/
 venv/
 .venv/
 *.egg-info/
+=======
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+>>>>>>> ab733829f328ee5e1df603741ae05c3dfc92b7d8
 
 # Flutter/Dart
 .dart_tool/
 .packages
+<<<<<<< HEAD
 build/
 *.iml
 .idea/
@@ -27,3 +49,17 @@ Thumbs.db
 # IDE
 .vscode/
 *.code-workspace
+=======
+.pub-cache/
+.pub/
+build/
+flutter_*.png
+*.log
+
+# Mac
+.DS_Store
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+>>>>>>> ab733829f328ee5e1df603741ae05c3dfc92b7d8

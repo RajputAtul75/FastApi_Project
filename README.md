@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # NyayaAI 🏛️
 
 **AI-powered Citizen Grievance Management Platform**
@@ -300,3 +301,72 @@ The default is `http://localhost:8000` in `api_client.dart`. For Android emulato
 ---
 
 *Built with ❤️ for SIH 2026*
+=======
+﻿# Personal Finance AI (PFAI)
+
+A comprehensive Personal Finance Assistant powered by AI. PFAI helps you track your transactions, manage budgets, set goals, and gives you intelligent insights into your spending habits using advanced AI and vector search technologies.
+
+## Tech Stack
+
+### Backend
+- **Framework:** FastAPI
+- **Database:** SQLite (via SQLAlchemy)
+- **Migrations:** Alembic
+- **Task Queue:** Celery + Redis
+- **Vector Database:** Qdrant
+- **AI Integration:** Google Generative AI (Gemini)
+- **Data Processing:** Pandas, PDFPlumber
+
+### Frontend
+- **Framework:** Flutter (Web, Android, iOS)
+- **Networking:** Dio
+- **Routing:** go_router
+- **Charts:** fl_chart
+- **State Management:** Riverpod
+
+## Project Structure
+
+- \ackend/\: Contains the FastAPI application, background tasks, and AI integrations.
+- \rontend/\: Contains the Flutter application providing a seamless UI across multiple platforms.
+
+## Setup & Installation
+
+### Backend Setup
+1. Navigate to the backend directory:
+   \\\ash
+   cd backend
+   \\\
+2. Create and activate a virtual environment.
+3. Install dependencies:
+   \\\ash
+   pip install -r requirements.txt
+   \\\
+4. Run migrations:
+   \\\ash
+   alembic upgrade head
+   \\\
+5. Start the server (Requires Redis for Celery):
+   \\\ash
+   uvicorn app.main:app --reload
+   \\\
+
+### Frontend Setup
+1. Navigate to the frontend directory:
+   \\\ash
+   cd frontend
+   \\\
+2. Install dependencies:
+   \\\ash
+   flutter pub get
+   \\\
+3. Run the app (e.g., on Chrome):
+   \\\ash
+   flutter run -d chrome
+   \\\
+
+## Features
+- **Upload Statements:** Upload CSV or PDF bank statements.
+- **Smart Categorization:** Automatically categorize transactions using AI.
+- **Interactive Dashboards:** View spending patterns via interactive charts.
+- **AI Chat Assistant:** Ask questions about your finances and get AI-powered insights.
+>>>>>>> ab733829f328ee5e1df603741ae05c3dfc92b7d8
