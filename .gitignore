@@ -1,0 +1,29 @@
+# Environment files
+.env
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+*.egg-info/
+
+# Flutter/Dart
+.dart_tool/
+.packages
+build/
+*.iml
+.idea/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+
+# IDE
+.vscode/
+*.code-workspace
