@@ -1,45 +1,30 @@
-"""NyayaAI Backend - FastAPI application entry point."""
 import os
-from dotenv import load_dotenv
-
-# Load .env before anything else
-load_dotenv()
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.database.connection import ensure_indexes
-from app.routes import grievances, dashboard, upload, seed
+from dotenv import load_dotenv
 
-app = FastAPI(
-    title="NyayaAI API",
-    description="AI-powered citizen grievance management platform",
-    version="1.0.0",
-)
+load_dotenv()
 
-# CORS - permissive for local development
+from app.database.connection import init_db
+from app.routes import health, grievance_routes, upload_routes, dashboard_routes, seed_routes
+
+# Initialize DB (indexes)
+init_db()
+
+app = FastAPI(title="NyayaAI Backend API")
+
+# Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # Allow all origins for development
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Register routes
-app.include_router(grievances.router)
-app.include_router(dashboard.router)
-app.include_router(upload.router)
-app.include_router(seed.router)
-
-
-@app.on_event("startup")
-def startup():
-    """Run on application startup."""
-    print("[*] NyayaAI Backend starting...")
-    ensure_indexes()
-    print("[+] NyayaAI Backend ready!")
-
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+# Include routers
+app.include_router(health.router, prefix="/api")
+app.include_router(grievance_routes.router, prefix="/api")
+app.include_router(upload_routes.router, prefix="/api")
+app.include_router(dashboard_routes.router, prefix="/api")
+app.include_router(seed_routes.router, prefix="/api")

@@ -1,46 +1,33 @@
-"""Image upload service using Cloudinary."""
 import os
 import cloudinary
 import cloudinary.uploader
 
+CLOUDINARY_CLOUD_NAME = os.getenv("CLOUDINARY_CLOUD_NAME")
+CLOUDINARY_API_KEY = os.getenv("CLOUDINARY_API_KEY")
+CLOUDINARY_API_SECRET = os.getenv("CLOUDINARY_API_SECRET")
 
-def _configure_cloudinary() -> bool:
-    """Configure Cloudinary from environment variables. Returns False if not configured."""
-    cloud_name = os.getenv("CLOUDINARY_CLOUD_NAME", "").strip()
-    api_key = os.getenv("CLOUDINARY_API_KEY", "").strip()
-    api_secret = os.getenv("CLOUDINARY_API_SECRET", "").strip()
-
-    if not all([cloud_name, api_key, api_secret]):
-        return False
-
+if CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET:
     cloudinary.config(
-        cloud_name=cloud_name,
-        api_key=api_key,
-        api_secret=api_secret,
-        secure=True,
+        cloud_name=CLOUDINARY_CLOUD_NAME,
+        api_key=CLOUDINARY_API_KEY,
+        api_secret=CLOUDINARY_API_SECRET
     )
-    return True
 
-
-def upload_image(file_bytes: bytes, filename: str) -> dict:
-    """
-    Upload image bytes to Cloudinary.
-    Returns {"url": "...", "public_id": "..."} on success.
-    Raises RuntimeError if Cloudinary is not configured or upload fails.
-    """
-    if not _configure_cloudinary():
-        raise RuntimeError("Image upload is temporarily unavailable. Cloudinary credentials are not configured.")
-
+def upload_to_cloudinary(file_bytes: bytes, filename: str) -> dict:
+    if not (CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET):
+        # Fallback if unconfigured
+        return {"error": "Cloudinary is not configured on the server."}
+        
     try:
         result = cloudinary.uploader.upload(
             file_bytes,
-            folder="nyayaai/grievances",
-            public_id=filename.rsplit(".", 1)[0] if "." in filename else filename,
             resource_type="image",
+            folder="nyayaai_evidence"
         )
         return {
-            "url": result["secure_url"],
-            "public_id": result["public_id"],
+            "url": result.get("secure_url"),
+            "public_id": result.get("public_id")
         }
     except Exception as e:
-        raise RuntimeError(f"Image upload failed: {str(e)}")
+        print(f"Cloudinary Upload Failed: {e}")
+        return {"error": str(e)}

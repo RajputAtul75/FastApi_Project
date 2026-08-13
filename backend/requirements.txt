@@ -1,29 +1,8 @@
-<<<<<<< HEAD
-fastapi==0.115.0
-uvicorn[standard]==0.30.6
-pydantic==2.9.2
-pymongo==4.8.0
-python-dotenv==1.0.1
-google-genai==1.10.0
-cloudinary==1.41.0
-python-multipart==0.0.9
-=======
 fastapi
-uvicorn[standard]
-sqlalchemy[asyncio]
-aiosqlite
-asyncpg
-redis
-celery
-qdrant-client
-pydantic-settings
-alembic
-passlib[bcrypt]
-bcrypt==4.0.1
-python-jose[cryptography]
+uvicorn
+pymongo
+pydantic
 python-multipart
-email-validator
-pandas
-pdfplumber
+python-dotenv
 google-generativeai
->>>>>>> ab733829f328ee5e1df603741ae05c3dfc92b7d8
+cloudinary

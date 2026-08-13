@@ -11,7 +11,10 @@ import 'package:mime/mime.dart';
 class ApiClient {
   // For Flutter Web on same machine, localhost works.
   // For Android emulator, use 10.0.2.2.
-  static const String _defaultBaseUrl = 'http://10.0.2.2:8000';
+  static const String _defaultBaseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'http://localhost:8000',
+  );
   final String baseUrl;
 
   ApiClient({String? baseUrl}) : baseUrl = baseUrl ?? _defaultBaseUrl;
