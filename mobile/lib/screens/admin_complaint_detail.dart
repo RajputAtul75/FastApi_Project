@@ -30,7 +30,15 @@ class _AdminComplaintDetailState extends State<AdminComplaintDetail> {
     super.didChangeDependencies();
     if (_complaint == null) {
       final ticketId = ModalRoute.of(context)?.settings.arguments as String?;
-      if (ticketId != null) _load(ticketId);
+      if (ticketId != null) {
+        _load(ticketId);
+      } else if (_loading) {
+        // Reached without a ticket (e.g. a direct /admin/detail deep link) —
+        // show a message instead of spinning forever. Assigned directly rather
+        // than via setState, since a build always follows this callback.
+        _loading = false;
+        _error = 'No complaint selected.';
+      }
     }
   }
 
@@ -38,8 +46,10 @@ class _AdminComplaintDetailState extends State<AdminComplaintDetail> {
     setState(() { _loading = true; _error = null; });
     try {
       final data = await _api.getGrievance(ticketId);
+      if (!mounted) return; // Session may have been ended mid-request.
       setState(() { _complaint = data; _loading = false; });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = e is ApiException ? e.message : 'Could not load complaint.';
         _loading = false;
@@ -51,13 +61,12 @@ class _AdminComplaintDetailState extends State<AdminComplaintDetail> {
     if (_complaint == null) return;
     try {
       await _api.updateStatus(_complaint!['ticket_id'], newStatus);
+      if (!mounted) return; // Guard the setState too, not just the SnackBar.
       setState(() => _complaint!['status'] = newStatus);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Status updated to $newStatus'),
-              backgroundColor: AppColors.resolved),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Status updated to $newStatus'),
+            backgroundColor: AppColors.resolved),
+      );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -72,13 +81,12 @@ class _AdminComplaintDetailState extends State<AdminComplaintDetail> {
     if (_complaint == null) return;
     try {
       await _api.updateDepartment(_complaint!['ticket_id'], newDept);
+      if (!mounted) return; // Guard the setState too, not just the SnackBar.
       setState(() => _complaint!['department'] = newDept);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Department updated to $newDept'),
-              backgroundColor: AppColors.resolved),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Department updated to $newDept'),
+            backgroundColor: AppColors.resolved),
+      );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

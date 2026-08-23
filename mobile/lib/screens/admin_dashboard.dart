@@ -3,7 +3,9 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:provider/provider.dart';
 import '../services/api_client.dart';
+import '../state/app_state.dart';
 import '../utils/theme.dart';
 
 class AdminDashboard extends StatefulWidget {
@@ -32,11 +34,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
     });
     try {
       final data = await _api.getDashboardStats();
+      if (!mounted) return; // Session may have been ended mid-request.
       setState(() {
         _stats = data;
         _loading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = 'Could not load dashboard data.';
         _loading = false;
@@ -44,8 +48,47 @@ class _AdminDashboardState extends State<AdminDashboard> {
     }
   }
 
+  Future<void> _confirmLogout() async {
+    final shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Sign out?'),
+        content: const Text(
+          'You will need your username and password again to reopen the '
+          'admin dashboard.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Sign out'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldLogout != true) return;
+    if (!mounted) return;
+
+    // Capture the navigator first: logout() notifies listeners synchronously,
+    // so AdminGuard can unmount this screen before the await returns — and then
+    // a context lookup here would be too late to reset the stack.
+    final navigator = Navigator.of(context);
+    await context.read<AppState>().logout();
+
+    // Reset the stack so Back cannot return to a protected screen.
+    navigator.pushNamedAndRemoveUntil('/', (route) => false);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final username = context.select<AppState, String?>(
+      (state) => state.adminUsername,
+    );
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Admin Dashboard'),
@@ -62,6 +105,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
             onPressed: _loadStats,
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout_rounded),
+            tooltip: username == null ? 'Sign out' : 'Sign out of $username',
+            onPressed: _confirmLogout,
           ),
         ],
       ),
@@ -94,11 +142,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
     if (_stats == null) return const SizedBox.shrink();
 
     final total = _stats!['total'] ?? 0;
-    final byStatus = Map<String, int>.from(
-      (_stats!['by_status'] ?? {}).map(
-        (k, v) => MapEntry(k.toString(), v as int),
-      ),
-    );
+    // The backend returns individual status counts, not a by_status map.
+    // Build the map from the actual response fields.
+    final byStatus = <String, int>{
+      'Submitted': (_stats!['pending'] ?? 0) as int,
+      'In Progress': (_stats!['in_progress'] ?? 0) as int,
+      'Resolved': (_stats!['resolved'] ?? 0) as int,
+    };
     final byPriority = Map<String, int>.from(
       (_stats!['by_priority'] ?? {}).map(
         (k, v) => MapEntry(k.toString(), v as int),

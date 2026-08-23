@@ -108,7 +108,8 @@ class _LandingScreenState extends State<LandingScreen> with SingleTickerProvider
         break;
       case 'Admin Dashboard':
       case 'Admin dashboard':
-        context.read<AppState>().switchToAdmin();
+        // No role switch here — AdminGuard on /admin shows the login screen
+        // first, and the role flips to admin only once the backend approves.
         Navigator.pushNamed(context, '/admin');
         break;
       default:

@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from app.database.connection import init_db
-from app.routes import health, grievance_routes, upload_routes, dashboard_routes, seed_routes
+from app.routes import health, grievance_routes, upload_routes, dashboard_routes, seed_routes, auth_routes
 
 # Initialize DB (indexes)
 init_db()
@@ -28,3 +28,4 @@ app.include_router(grievance_routes.router, prefix="/api")
 app.include_router(upload_routes.router, prefix="/api")
 app.include_router(dashboard_routes.router, prefix="/api")
 app.include_router(seed_routes.router, prefix="/api")
+app.include_router(auth_routes.router, prefix="/api")

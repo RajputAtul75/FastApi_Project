@@ -28,11 +28,13 @@ class _AdminComplaintListState extends State<AdminComplaintList> {
     setState(() { _loading = true; _error = null; });
     try {
       final data = await _api.listGrievances(limit: 100);
+      if (!mounted) return; // Session may have been ended mid-request.
       setState(() {
-        _complaints = data['grievances'] ?? [];
+        _complaints = data['data'] ?? [];
         _loading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = 'Could not load complaints.';
         _loading = false;
@@ -73,6 +75,7 @@ class _AdminComplaintListState extends State<AdminComplaintList> {
                           onTap: () async {
                             await Navigator.pushNamed(ctx, '/admin/detail',
                                 arguments: _complaints[i]['ticket_id']);
+                            if (!mounted) return;
                             _load(); // Refresh after returning
                           },
                         ),

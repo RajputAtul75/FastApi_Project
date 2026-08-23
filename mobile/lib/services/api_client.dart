@@ -27,6 +27,50 @@ class ApiClient {
     return _handleResponse(response);
   }
 
+  // --- Auth ---
+  /// Authenticates an admin against `POST /api/auth/login`.
+  ///
+  /// The backend is the only authority on credentials — nothing is verified
+  /// locally. On failure this throws an [ApiException] whose [statusCode]
+  /// tells the caller what went wrong:
+  ///   * `401` — the username or password was rejected.
+  ///   * `0`   — the server could not be reached at all (offline, wrong
+  ///             `API_BASE_URL`, backend not running).
+  Future<Map<String, dynamic>> adminLogin({
+    required String username,
+    required String password,
+  }) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/api/auth/login'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'username': username, 'password': password}),
+          )
+          .timeout(const Duration(seconds: 15));
+      final result = _handleResponse(response);
+
+      // Don't infer success from the status code alone — require the backend's
+      // own success flag, so a 200 carrying a failure payload can't sign anyone in.
+      if (result['success'] != true) {
+        throw ApiException(
+          statusCode: 401,
+          message: 'Invalid username or password.',
+        );
+      }
+      return result;
+    } on ApiException {
+      rethrow; // A real HTTP response — let the caller read the status code.
+    } catch (_) {
+      // SocketException / ClientException / TimeoutException / bad JSON.
+      throw ApiException(
+        statusCode: 0,
+        message: 'Could not reach the NyayaAI server. '
+            'Check that the backend is running at $baseUrl.',
+      );
+    }
+  }
+
   // --- Grievances ---
   Future<Map<String, dynamic>> createGrievance({
     required String title,
@@ -140,8 +184,23 @@ class ApiClient {
 
   // --- Helper ---
   Map<String, dynamic> _handleResponse(http.Response response) {
-    final body = jsonDecode(response.body);
-    if (response.statusCode >= 200 && response.statusCode < 300) {
+    final isSuccess = response.statusCode >= 200 && response.statusCode < 300;
+
+    dynamic body;
+    try {
+      body = jsonDecode(response.body);
+    } on FormatException {
+      // Body isn't JSON — e.g. an HTML error page from a proxy or gateway.
+      // Keep the real status code so callers don't mistake this for being
+      // offline.
+      if (isSuccess) return {};
+      throw ApiException(
+        statusCode: response.statusCode,
+        message: response.body,
+      );
+    }
+
+    if (isSuccess) {
       return body is Map<String, dynamic> ? body : {'data': body};
     }
     throw ApiException(
