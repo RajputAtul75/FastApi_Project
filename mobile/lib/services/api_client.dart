@@ -7,23 +7,72 @@ import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:mime/mime.dart';
+import 'runtime_config.dart';
 
 class ApiClient {
-  // For Flutter Web on same machine, localhost works.
-  // For Android emulator, use 10.0.2.2.
-  static const String _defaultBaseUrl = String.fromEnvironment(
+  /// Compile-time backend URL, set with `--dart-define=API_BASE_URL=...`.
+  ///
+  /// On web this value is baked into `main.dart.js`, so it cannot be changed
+  /// after a build — see [resolvedBaseUrl] for the escape hatch.
+  /// For an Android emulator talking to a host machine, use `http://10.0.2.2:8000`.
+  static const String _compileTimeBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
     defaultValue: 'http://localhost:8000',
   );
+
+  /// The backend URL this app will actually use, resolved once at startup from
+  /// the first source that supplies a non-blank value:
+  ///
+  ///   1. `window.NYAYA_API_BASE_URL`, set by `web/config.js` (web only).
+  ///      Editable in `build/web/config.js` after a build, so a deployed site
+  ///      can be repointed without a Flutter rebuild.
+  ///   2. The `API_BASE_URL` dart-define.
+  ///   3. `http://localhost:8000`.
+  ///
+  /// Order matters: the runtime value wins so that a web build made without
+  /// the dart-define cannot silently ship a `localhost` URL to real visitors,
+  /// which resolves to the *visitor's own machine* and fails for everyone.
+  static final String resolvedBaseUrl = _resolveBaseUrl();
+
+  static String _resolveBaseUrl() {
+    var chosen = _compileTimeBaseUrl;
+    final override = runtimeApiBaseUrl();
+    // Only accept an absolute http(s) URL. A value like 'api.example.com'
+    // (scheme forgotten while hand-editing config.js) parses as a *relative*
+    // URI, so on web every request would quietly hit the Flutter site itself
+    // and return 404 HTML, and on mobile it would throw — both baffling to
+    // debug. Ignoring it here fails far more legibly.
+    if (override != null &&
+        (override.startsWith('http://') || override.startsWith('https://'))) {
+      chosen = override;
+    }
+    // A trailing slash would turn '$baseUrl/api/health' into '...//api/health',
+    // which some proxies 404 rather than normalise.
+    while (chosen.endsWith('/')) {
+      chosen = chosen.substring(0, chosen.length - 1);
+    }
+    return chosen;
+  }
+
   final String baseUrl;
 
-  ApiClient({String? baseUrl}) : baseUrl = baseUrl ?? _defaultBaseUrl;
+  ApiClient({String? baseUrl}) : baseUrl = baseUrl ?? resolvedBaseUrl;
+
+  /// Timeout for requests that gate the UI.
+  ///
+  /// Free-tier hosts (Render, Fly, Railway) suspend idle web services and take
+  /// 30-60s to wake, and the backend also opens its first MongoDB Atlas
+  /// connection during that window. The first request after a quiet period pays
+  /// that whole cost. A short timeout here surfaces as "Could not reach the
+  /// NyayaAI server" while the server is in fact booting perfectly well, so be
+  /// generous — a slow success beats a fast, wrong error message.
+  static const Duration _coldStartTimeout = Duration(seconds: 60);
 
   // --- Health ---
   Future<Map<String, dynamic>> healthCheck() async {
     final response = await http
         .get(Uri.parse('$baseUrl/api/health'))
-        .timeout(const Duration(seconds: 5));
+        .timeout(_coldStartTimeout);
     return _handleResponse(response);
   }
 
@@ -47,7 +96,7 @@ class ApiClient {
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode({'username': username, 'password': password}),
           )
-          .timeout(const Duration(seconds: 15));
+          .timeout(_coldStartTimeout);
       final result = _handleResponse(response);
 
       // Don't infer success from the status code alone — require the backend's

@@ -31,6 +31,14 @@
 
   <title>nyayaai_mobile</title>
   <link rel="manifest" href="manifest.json">
+
+  <!--
+    Runtime backend configuration. Deliberately a plain (non-async, non-module)
+    script so it finishes executing before the async flutter_bootstrap.js below
+    starts the Dart app, guaranteeing window.NYAYA_API_BASE_URL is already set
+    by the time ApiClient reads it.
+  -->
+  <script src="config.js"></script>
 </head>
 <body>
   <!--

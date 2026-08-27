@@ -1,4 +1,15 @@
 {
   "buildCommand": "echo 'Skipping build as it is already built locally.'",
-  "outputDirectory": "build/web"
+  "outputDirectory": "build/web",
+  "headers": [
+    {
+      "source": "/config.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, must-revalidate"
+        }
+      ]
+    }
+  ]
 }
